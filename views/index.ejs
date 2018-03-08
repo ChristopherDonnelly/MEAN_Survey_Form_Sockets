@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Using Sockets Revisited</title>
+    <link rel='stylesheet' href='/css/style.css' />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type ="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type ="text/javascript">
+
+        (function ($) {
+            $.fn.serializeFormJSON = function () {
+                var o = {};
+                var a = this.serializeArray();
+                $.each(a, function () {
+                    if (o[this.name]) {
+                        if (!o[this.name].push) {
+                            o[this.name] = [o[this.name]];
+                        }
+                        o[this.name].push(this.value || '');
+                    } else {
+                        o[this.name] = this.value || '';
+                    }
+                });
+                return o;
+            };
+        })(jQuery);
+
+         $(document). ready(function (){
+            // this triggers the connection event in our server!
+            var socket  = io.connect();
+
+            socket.on('broadcast_event', function(data){
+                $('#server_response').prepend(`<p>You emitted the following information to the server: { name: '${data.name}', location: '${data.location}', language: '${data.language}', comment: '${data.comment}'}</p><p>Your lucky number emitted by the server is ${data.lucky_number}.</p>`).removeClass('hidden');
+
+                $("#survey_form").addClass('hidden')[0].reset();
+            });
+
+            $("#survey_form").submit(function(e){
+                let message = $(this).serializeFormJSON();
+
+                socket.emit("button_clicked", message);
+                e.preventDefault();
+            });
+
+        })
+    </script>
+</head>
+<body>
+    <div id="wrapper">
+        <h1>Survey Form Revisited</h1> 
+        <div id="content_layer">
+            <form action="" id="survey_form" method="post">
+                <label for="full_name"><span>Your Name:</span>
+                <input type="text" name="full_name" id="full_name" placeholder="Enter Name" autofocus></label>
+                
+                <label for="location"><span>Dojo Location:</span>
+                <select name="location" id="location">
+                    <option value="Seattle">Seattle</option>
+                    <option value="Silicon Valley">Silicon Valley</option>
+                    <option value="Los Angeles">Los Angeles</option>
+                    <option value="Dallas">Dallas</option>
+                    <option value="Tulsa">Tulsa</option>
+                    <option value="Chicago">Chicago</option>
+                    <option value="Washington DC">Washington DC</option>
+                </select></label>
+
+                <label for="language"><span>Favorite Language:</span>
+                <select name="language" id="language">
+                    <option value="JQuery">JQuery</option>
+                    <option value="Java">Java</option>
+                    <option value="javascript">Javascript</option>
+                    <option value="C#">C#</option>
+                    <option value="Python">Python</option>
+                    <option value="iOS Swift">iOS Swift</option>
+                </select></label>
+                
+                <label for="comment"><span>Comment (Optional):</span>
+                <textarea name="comment" rows="4" cols="50"></textarea></label>
+                
+                <span>
+                    <input type="submit" value="Submit">
+                </span>
+            </form>
+            <div id="server_response" class="hidden">
+                
+            </div>
+        </div>
+    </div>
+</body>
+</html>
